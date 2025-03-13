@@ -3,53 +3,23 @@ package main
 import (
 	"context"
 	"log"
-	"time"
 
+	"github.com/gin-gonic/gin"
 	"github.com/redis/go-redis/v9"
 	"gorm.io/driver/postgres"
 	"gorm.io/gorm"
+	"redditBack/model"
 )
-
-type User struct {
-	ID           uint      `gorm:"primaryKey"`
-	Username     string    `gorm:"unique;not null"`
-	Email        string    `gorm:"unique;not null"`
-	PasswordHash string    `gorm:"not null"`
-	CreatedAt    time.Time `gorm:"autoCreateTime"`
-	UpdatedAt    time.Time `gorm:"autoUpdateTime"`
-	Posts        []Post    `gorm:"foreignKey:UserID"`
-	Votes        []Vote    `gorm:"foreignKey:UserID"`
-}
-
-type Post struct {
-	ID          uint      `gorm:"primaryKey"`
-	Title       string    `gorm:"not null"`
-	Content     string    `gorm:"not null;type:text"`
-	UserID      uint      `gorm:"not null"`
-	CreatedAt   time.Time `gorm:"autoCreateTime"`
-	UpdatedAt   time.Time `gorm:"autoUpdateTime"`
-	CachedScore int       `gorm:"default:0"`
-	User        User      `gorm:"foreignKey:UserID"`
-	Votes       []Vote    `gorm:"foreignKey:PostID"`
-}
-
-type Vote struct {
-	UserID    uint      `gorm:"primaryKey"`
-	PostID    uint      `gorm:"primaryKey"`
-	VoteValue int       `gorm:"check:vote_value IN (-1,1)"`
-	CreatedAt time.Time `gorm:"autoCreateTime"`
-	User      User      `gorm:"foreignKey:UserID;constraint:OnDelete:CASCADE"`
-	Post      Post      `gorm:"foreignKey:PostID;constraint:OnDelete:CASCADE"`
-}
 
 func main() {
 	dsn := "host=localhost user=pg password=pass dbname=reddit port=5432 sslmode=disable"
+
 	db, err := gorm.Open(postgres.Open(dsn), &gorm.Config{})
 	if err != nil {
 		panic("Failed to connect to database")
 	}
 
-	err = db.AutoMigrate(&User{}, &Post{}, &Vote{})
+	err = db.AutoMigrate(&model.User{}, &model.Post{}, &model.Vote{})
 	if err != nil {
 		panic("Migration failed")
 	}
@@ -75,14 +45,31 @@ func main() {
 
 		Password: "",
 
-		DB: 0, 
-
+		DB: 0,
 	})
 	defer rdb.Close()
 	status, err := rdb.Ping(context.Background()).Result()
 
 	if err != nil {
-		log.Fatalln("Redis connection was refused")
+		panic("Redis connection was refused")
 	}
 	log.Print(status)
+
+	router := gin.Default()
+	router.POST("/signup", signUp)
+	router.Run("0.0.0.0:8080")
+}
+
+func signUp(c *gin.Context) {
+	type SignupRequest struct {
+		Username string `json:"username" binding:"required"`
+		Email    string `json:"email" binding:"required,email"`
+		Password string `json:"password" binding:"required,min=6"`
+	}
+	var req SignupRequest
+	if err := c.ShouldBindJSON(&req); err != nil {
+		c.JSON(400, gin.H{"error": err.Error()})
+		return
+	}
+
 }
