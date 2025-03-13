@@ -5,7 +5,6 @@ import (
 	"errors"
 	"redditBack/model"
 
-	"github.com/redis/go-redis/v9"
 	"gorm.io/gorm"
 )
 
@@ -17,8 +16,11 @@ type PostRepository interface {
 }
 
 type PostRepositoryImpl struct {
-	db  *gorm.DB
-	rdb *redis.Client
+	db *gorm.DB
+}
+
+func newPostRepository(db *gorm.DB) *PostRepositoryImpl {
+	return &PostRepositoryImpl{db: db}
 }
 
 func (r *PostRepositoryImpl) Create(ctx context.Context, post *model.Post) error {

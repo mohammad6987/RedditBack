@@ -4,8 +4,10 @@ import (
 	"context"
 	"log"
 
+	"redditBack/handler"
 	"redditBack/model"
 	"redditBack/repository"
+	"redditBack/service"
 
 	"github.com/gin-gonic/gin"
 	"github.com/redis/go-redis/v9"
@@ -16,27 +18,22 @@ import (
 func main() {
 
 	db := connetToPostgreSQL()
-	repository.NewUserRepository(db)
+	//rdb := connetToRedis()
 
-	rdb := connetToRedis()
+	userRepo := repository.NewUserRepository(db)
+	//postRepo := repository.NewPostRepository(db)
+	//voteRepo := repository.NewVoteRepository(db)
+
+	authService := service.NewAuthService(&userRepo)
+	//postService := service.NewPostService(postRepo)
+	//voteService := service.NewVoteService(voteRepo, postRepo)
+
+	authHandler := handler.NewAuthHandler(authService)
 
 	router := gin.Default()
-	router.POST("/signup", signUp)
+	router.POST("/signup", authHandler.SignUp)
+	router.POST("/login", authHandler.Login)
 	router.Run("0.0.0.0:8080")
-}
-
-func signUp(c *gin.Context) {
-	type SignupRequest struct {
-		Username string `json:"username" binding:"required"`
-		Email    string `json:"email" binding:"required,email"`
-		Password string `json:"password" binding:"required,min=6"`
-	}
-	var req SignupRequest
-	if err := c.ShouldBindJSON(&req); err != nil {
-		c.JSON(400, gin.H{"error": err.Error()})
-		return
-	}
-
 }
 
 func connetToPostgreSQL() *gorm.DB {
@@ -68,8 +65,8 @@ func connetToPostgreSQL() *gorm.DB {
 	return db
 }
 
-func connetToRedis() *redis.Client{
-	rdc = redis.NewClient(&redis.Options{
+func connetToRedis() *redis.Client {
+	rdb := redis.NewClient(&redis.Options{
 
 		Addr: "0.0.0.0:6380",
 
@@ -84,5 +81,5 @@ func connetToRedis() *redis.Client{
 		panic("Redis connection was refused")
 	}
 	log.Print(status)
-	return rdc
+	return rdb
 }
