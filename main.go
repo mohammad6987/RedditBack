@@ -1,9 +1,11 @@
 package main
 
 import (
+	"context"
 	"log"
 	"time"
 
+	"github.com/redis/go-redis/v9"
 	"gorm.io/driver/postgres"
 	"gorm.io/gorm"
 )
@@ -53,17 +55,34 @@ func main() {
 	}
 
 	migrator := db.Migrator()
-    
-    tables := []string{"users", "posts", "votes"}
-    for _, table := range tables {
-        exists := migrator.HasTable(table)
-        if exists {
-            log.Printf("Table %s exists", table)
-        } else {
-            log.Printf("Table %s does NOT exist", table)
+
+	tables := []string{"users", "posts", "votes"}
+	for _, table := range tables {
+		exists := migrator.HasTable(table)
+		if exists {
+			log.Printf("Table %s exists", table)
+		} else {
+			log.Printf("Table %s does NOT exist", table)
 			panic("Error in creating tables , exiting...")
-        }
-    }
+		}
+	}
 
 	log.Print("database connection successful , created tables")
+
+	rdb := redis.NewClient(&redis.Options{
+
+		Addr: "0.0.0.0:6380",
+
+		Password: "",
+
+		DB: 0, 
+
+	})
+	defer rdb.Close()
+	status, err := rdb.Ping(context.Background()).Result()
+
+	if err != nil {
+		log.Fatalln("Redis connection was refused")
+	}
+	log.Print(status)
 }
