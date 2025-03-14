@@ -19,8 +19,8 @@ type PostRepositoryImpl struct {
 	db *gorm.DB
 }
 
-func newPostRepository(db *gorm.DB) *PostRepositoryImpl {
-	return &PostRepositoryImpl{db: db}
+func newPostRepository(db *gorm.DB) PostRepositoryImpl {
+	return PostRepositoryImpl{db: db}
 }
 
 func (r *PostRepositoryImpl) Create(ctx context.Context, post *model.Post) error {

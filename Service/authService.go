@@ -25,9 +25,7 @@ func (s *AuthService) Register(ctx context.Context, user *model.User) error {
 		return errors.New("username already exists")
 	}
 	existingUser2, err := s.userRepo.FindByEmail(ctx, user.Email)
-	if err != nil {
-		return err
-	}
+	
 	if existingUser2 != nil {
 		return errors.New("username already exists")
 	}
