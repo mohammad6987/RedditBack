@@ -8,7 +8,7 @@ import (
 	"redditBack/model"
 	"redditBack/repository"
 	"redditBack/service"
-	"redditBack/utility"
+
 
 	"github.com/gin-gonic/gin"
 	"github.com/redis/go-redis/v9"
@@ -26,10 +26,12 @@ func main() {
 	//voteRepo := repository.NewVoteRepository(db)
 
 	authService := service.NewAuthService(&userRepo)
-	postService := service.NewPostService(postRepo,userRepo )
+	postService := service.NewPostService(&postRepo,&userRepo )
 	//voteService := service.NewVoteService(voteRepo, postRepo)
 
 	authHandler := handler.NewAuthHandler(authService)
+	postHandler := handler.NewPostHandler(postService)
+
 
 	router := gin.Default()
 	router.POST("/signup", authHandler.SignUp)
@@ -37,9 +39,9 @@ func main() {
 	auth := router.Group("/")
 	auth.Use(handler.JWTAuthMiddleware())
 	{
-		auth.POST("/signout" , authHandler.signOut)
-		/*auth.POST("/posts", CreatePost)
-		auth.PUT("/posts/:id", UpdatePost)
+		//auth.POST("/signout" , authHandler.signOut)
+		auth.POST("/posts", postHandler.CreatePost)
+		/*auth.PUT("/posts/:id", UpdatePost)
 		auth.DELETE("/posts/:id", DeletePost)
 		auth.POST("/posts/:id/vote", VotePost)*/
 	}

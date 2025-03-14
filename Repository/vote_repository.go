@@ -37,3 +37,11 @@ func (r *VoteRepositoryImp) FindByID(ctx context.Context, id uint) (*model.Vote,
 	}
 	return &vote, err
 }
+
+func (r *VoteRepositoryImp) Delete(ctx context.Context, id uint) error {
+	result := r.db.WithContext(ctx).Delete(&model.Post{}, id)
+	if result.RowsAffected == 0 {
+		return errors.New("No post record with this ID!")
+	}
+	return result.Error
+}

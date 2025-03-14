@@ -12,16 +12,12 @@ type PostService struct {
 	userRepo repository.UserRepository
 }
 
-func newPostService(postRepo repository.PostRepository, userRepo repository.UserRepository) PostService {
+func NewPostService(postRepo repository.PostRepository, userRepo repository.UserRepository) PostService {
 	return PostService{postRepo: postRepo, userRepo: userRepo}
 }
 
-func (p *PostService) createNewPost(ctx context.Context, post *model.Post) error {
-	usernameVal := ctx.Value("user_id")
-	username, ok := usernameVal.(string)
-	if !ok {
-		return errors.New("invalid username type in context")
-	}
+func (p *PostService) CreateNewPost(ctx context.Context, post *model.Post, username string) error {
+
 	user, err := p.userRepo.FindByUsername(ctx, username)
 	if err != nil {
 		return errors.New("Error in username")
@@ -30,12 +26,8 @@ func (p *PostService) createNewPost(ctx context.Context, post *model.Post) error
 	return p.postRepo.Create(ctx, post)
 }
 
-func (p *PostService) editPost(ctx context.Context, post *model.Post) error {
-	usernameVal := ctx.Value("user_id")
-	username, ok := usernameVal.(string)
-	if !ok {
-		return errors.New("invalid username type in context")
-	}
+func (p *PostService) EditPost(ctx context.Context, post *model.Post, username string) error {
+
 	user, err := p.userRepo.FindByUsername(ctx, username)
 	if err != nil {
 		return errors.New("Error in username")
@@ -49,22 +41,17 @@ func (p *PostService) editPost(ctx context.Context, post *model.Post) error {
 	}
 
 	updatedPost := model.Post{
-        ID:     tempPost.ID,
-        Title:   post.Title,
-        Content: post.Content,
-        UserID:  tempPost.UserID, // Preserve original owner
-    }
-	return p.postRepo.Update(ctx , &updatedPost)
+		ID:      tempPost.ID,
+		Title:   post.Title,
+		Content: post.Content,
+		UserID:  tempPost.UserID, // Preserve original owner
+	}
+	return p.postRepo.Update(ctx, &updatedPost)
 
-	
 }
 
-func (p *PostService) removePost(ctx context.Context, post *model.Post) error {
-	usernameVal := ctx.Value("user_id")
-	username, ok := usernameVal.(string)
-	if !ok {
-		return errors.New("invalid username type in context")
-	}
+func (p *PostService) RemovePost(ctx context.Context, post *model.Post, username string) error {
+
 	user, err := p.userRepo.FindByUsername(ctx, username)
 	if err != nil {
 		return errors.New("Error in username")
@@ -77,5 +64,5 @@ func (p *PostService) removePost(ctx context.Context, post *model.Post) error {
 		return errors.New("you don't have authority to remove this post!")
 	}
 
-	return p.postRepo.Delete(ctx ,tempPost.ID )
+	return p.postRepo.Delete(ctx, tempPost.ID)
 }

@@ -19,7 +19,7 @@ type PostRepositoryImpl struct {
 	db *gorm.DB
 }
 
-func newPostRepository(db *gorm.DB) PostRepositoryImpl {
+func NewPostRepository(db *gorm.DB) PostRepositoryImpl {
 	return PostRepositoryImpl{db: db}
 }
 
