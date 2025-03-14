@@ -27,11 +27,11 @@ func main() {
 
 	authService := service.NewAuthService(&userRepo)
 	postService := service.NewPostService(&postRepo, &userRepo)
-	voteService := service.NewVoteService(&voteRepo, &postRepo , &userRepo , &cacheRepo)
+	voteService := service.NewVoteService(&voteRepo, &postRepo, &userRepo, &cacheRepo)
 
 	authHandler := handler.NewAuthHandler(authService)
 	postHandler := handler.NewPostHandler(postService)
-	voteHandler := handler.NewVoteHandler(&voteService)
+	voteHandler := handler.NewVoteHandler(voteService)
 
 	router := gin.Default()
 	router.POST("/signup", authHandler.SignUp)
@@ -43,7 +43,7 @@ func main() {
 		auth.POST("/posts/create", postHandler.CreatePost)
 		auth.PUT("/posts/update", postHandler.EditPost)
 		auth.DELETE("/posts/remove", postHandler.RemovePost)
-		auth.POST("/vote",voteHandler.VotePost)
+		auth.POST("/vote", voteHandler.VotePost)
 	}
 	router.Run("0.0.0.0:8080")
 }

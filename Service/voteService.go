@@ -35,12 +35,16 @@ func (s *VoteService) VotePost(ctx context.Context, postID uint, username string
 	if voteValue != 1 && voteValue != -1 && voteValue != 0 {
 		return ErrInvalidVoteValue
 	}
-
+	fmt.Printf("postID : %u", postID)
 	post, err := s.postRepo.FindByID(ctx, postID)
-	if err != nil {
+	if err != nil || post == nil {
 		return fmt.Errorf("post not found")
 	}
 	user, err := s.userRepo.FindByUsername(ctx, username)
+	if err != nil {
+		return fmt.Errorf("can't find user with username %s", username)
+	}
+	fmt.Print(post.UserID)
 	if post.UserID == user.ID {
 		return ErrSelfVote
 	}
@@ -55,6 +59,7 @@ func (s *VoteService) VotePost(ctx context.Context, postID uint, username string
 	} else {
 
 		voteDelta = voteValue
+		fmt.Printf("%u %s %s", user.ID, postID, voteValue)
 		newVote := &model.Vote{
 			UserID:    user.ID,
 			PostID:    postID,
