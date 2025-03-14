@@ -52,7 +52,7 @@ func main() {
 	cacheRepo := repository.NewRedisCacheRepository(rdb)
 
 	authService := service.NewAuthService(&userRepo, &cacheRepo)
-	postService := service.NewPostService(&postRepo, &userRepo)
+	postService := service.NewPostService(&postRepo, &userRepo, &cacheRepo, &voteRepo)
 	voteService := service.NewVoteService(&voteRepo, &postRepo, &userRepo, &cacheRepo)
 
 	util := utility.NewUtility(&cacheRepo)
@@ -68,6 +68,7 @@ func main() {
 	auth := router.Group("/")
 	auth.Use(util.JWTAuthMiddleware())
 	{
+		auth.GET("/top", postHandler.GetTopPosts)
 		auth.POST("/signout", authHandler.SignOut)
 		auth.POST("/posts/create", postHandler.CreatePost)
 		auth.PUT("/posts/update", postHandler.EditPost)

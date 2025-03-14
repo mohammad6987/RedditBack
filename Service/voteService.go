@@ -64,6 +64,7 @@ func (s *VoteService) VotePost(ctx context.Context, postID uint, username string
 			UserID:    user.ID,
 			PostID:    postID,
 			VoteValue: voteValue,
+
 		}
 		err = s.voteRepo.Create(ctx, newVote)
 	}

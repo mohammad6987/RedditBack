@@ -12,7 +12,7 @@ type VoteRepository interface {
 	Create(ctx context.Context, post *model.Vote) error
 	FindByUserAndPost(ctx context.Context, userID uint, postID uint) (*model.Vote, error)
 	Update(ctx context.Context, vote *model.Vote) error
-	Delete(ctx context.Context, id uint) error
+	Delete(ctx context.Context, postID uint) error
 }
 
 type VoteRepositoryImp struct {
@@ -42,10 +42,13 @@ func (r *VoteRepositoryImp) Update(ctx context.Context, vote *model.Vote) error 
 	return r.db.WithContext(ctx).Save(vote).Error
 }
 
-func (r *VoteRepositoryImp) Delete(ctx context.Context, id uint) error {
-	result := r.db.WithContext(ctx).Delete(&model.Post{}, id)
+func (r *VoteRepositoryImp) Delete(ctx context.Context, postID uint) error {
+	result := r.db.WithContext(ctx).
+		Where("PostID = ?", postID).
+		Delete(&model.Vote{})
+
 	if result.RowsAffected == 0 {
-		return errors.New("No post record with this ID!")
+		return errors.New("vote not found")
 	}
 	return result.Error
 }

@@ -17,7 +17,6 @@ func NewPostHandler(postService service.PostService) PostHandler {
 	return PostHandler{postService: postService}
 }
 
-
 // CreatePost godoc
 // @Summary Create a new post
 // @Description Create a new post with title and content
@@ -65,7 +64,6 @@ func (h *PostHandler) CreatePost(c *gin.Context) {
 	c.JSON(http.StatusOK, gin.H{})
 
 }
-
 
 // EditPost godoc
 // @Summary Update a post
@@ -125,7 +123,6 @@ func (h *PostHandler) EditPost(c *gin.Context) {
 
 }
 
-
 // RemovePost godoc
 // @Summary Delete a post
 // @Description Delete an existing post
@@ -177,4 +174,25 @@ func (h *PostHandler) RemovePost(c *gin.Context) {
 		"message": "post removed successfully",
 	})
 
+}
+
+// @Summary Get top posts
+// @Description Get top posts filtered by time range
+// @Tags posts
+// @Produce json
+// @Param time query string false "Time range filter" Enums(day, week, month, all) default(day)
+// @Success 200 {array} model.Post
+// @Failure 400 {object} map[string]string
+// @Failure 500 {object} map[string]string
+// @Router /posts/top [get]
+func (c *PostHandler) GetTopPosts(ctx *gin.Context) {
+	timeRange := ctx.DefaultQuery("time", "day")
+
+	posts, err := c.postService.GetTopPosts(ctx.Request.Context(), timeRange)
+	if err != nil {
+		ctx.JSON(http.StatusInternalServerError, gin.H{"error": err.Error()})
+		return
+	}
+
+	ctx.JSON(http.StatusOK, posts)
 }

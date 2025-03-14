@@ -4,6 +4,7 @@ import (
 	"context"
 	"errors"
 	"redditBack/model"
+	"time"
 
 	"gorm.io/gorm"
 )
@@ -14,6 +15,7 @@ type PostRepository interface {
 	Update(ctx context.Context, post *model.Post) error
 	Delete(ctx context.Context, id uint) error
 	UpdateScore(ctx context.Context, postID uint, scoreDelta int) error
+	FindTopPosts(ctx context.Context, startTime time.Time) ([]*model.Post, error)
 }
 
 type PostRepositoryImpl struct {
@@ -52,13 +54,16 @@ func (r *PostRepositoryImpl) Update(ctx context.Context, post *model.Post) error
 
 	return nil
 }
-
 func (r *PostRepositoryImpl) Delete(ctx context.Context, id uint) error {
-	result := r.db.WithContext(ctx).Delete(&model.Post{}, id)
+	result := r.db.WithContext(ctx).Model(&model.Post{}).
+		Where("ID = ?", id).
+		Delete(&model.Post{})
+
 	if result.RowsAffected == 0 {
-		return errors.New("No post record with this ID!")
+		return errors.New("post not found for deleting!")
 	}
 	return result.Error
+
 }
 
 func (r *PostRepositoryImpl) UpdateScore(ctx context.Context, postID uint, scoreDelta int) error {
@@ -76,4 +81,23 @@ func (r *PostRepositoryImpl) UpdateScore(ctx context.Context, postID uint, score
 	}
 
 	return nil
+}
+
+func (r *PostRepositoryImpl) FindTopPosts(ctx context.Context, startTime time.Time) ([]*model.Post, error) {
+	var posts []*model.Post
+
+	query := r.db.WithContext(ctx).
+		Order("cached_score DESC").
+		Order("created_at DESC")
+
+	if !startTime.IsZero() {
+		query = query.Where("created_at >= ?", startTime)
+	}
+
+	err := query.Find(&posts).Error
+	if err != nil {
+		return nil, err
+	}
+
+	return posts, nil
 }

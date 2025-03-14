@@ -11,5 +11,5 @@ type Post struct {
 	UpdatedAt   time.Time `gorm:"autoUpdateTime"`
 	CachedScore int       `gorm:"default:0"`
 	User        User      `gorm:"foreignKey:UserID"`
-	Votes       []Vote    `gorm:"foreignKey:PostID"`
+	Votes       []Vote    `gorm:"foreignKey:PostID;constraint:OnDelete:CASCADE"`
 }
