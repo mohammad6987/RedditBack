@@ -9,7 +9,6 @@ import (
 	"redditBack/repository"
 	"redditBack/service"
 
-
 	"github.com/gin-gonic/gin"
 	"github.com/redis/go-redis/v9"
 	"gorm.io/driver/postgres"
@@ -26,12 +25,11 @@ func main() {
 	//voteRepo := repository.NewVoteRepository(db)
 
 	authService := service.NewAuthService(&userRepo)
-	postService := service.NewPostService(&postRepo,&userRepo )
+	postService := service.NewPostService(&postRepo, &userRepo)
 	//voteService := service.NewVoteService(voteRepo, postRepo)
 
 	authHandler := handler.NewAuthHandler(authService)
 	postHandler := handler.NewPostHandler(postService)
-
 
 	router := gin.Default()
 	router.POST("/signup", authHandler.SignUp)
@@ -40,10 +38,10 @@ func main() {
 	auth.Use(handler.JWTAuthMiddleware())
 	{
 		//auth.POST("/signout" , authHandler.signOut)
-		auth.POST("/posts", postHandler.CreatePost)
-		/*auth.PUT("/posts/:id", UpdatePost)
-		auth.DELETE("/posts/:id", DeletePost)
-		auth.POST("/posts/:id/vote", VotePost)*/
+		auth.POST("/posts/create", postHandler.CreatePost)
+		auth.PUT("/posts/update", postHandler.EditPost)
+		auth.DELETE("/posts/remove", postHandler.RemovePost)
+		/*auth.POST("/posts/:id/vote", VotePost)*/
 	}
 	router.Run("0.0.0.0:8080")
 }

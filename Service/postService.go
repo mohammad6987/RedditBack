@@ -34,10 +34,10 @@ func (p *PostService) EditPost(ctx context.Context, post *model.Post, username s
 	}
 	tempPost, postErr := p.postRepo.FindByID(ctx, post.ID)
 	if postErr != nil {
-		return errors.New("Post with this ID doesn't exist!")
+		return errors.New("post not found")
 	}
 	if tempPost.UserID != user.ID {
-		return errors.New("you don't have authority to edit this code!")
+		return errors.New("unauthorized to edit post")
 	}
 
 	updatedPost := model.Post{
@@ -58,10 +58,10 @@ func (p *PostService) RemovePost(ctx context.Context, post *model.Post, username
 	}
 	tempPost, postErr := p.postRepo.FindByID(ctx, post.ID)
 	if postErr != nil {
-		return errors.New("Post with this ID doesn't exist!")
+		return errors.New("post not found")
 	}
 	if tempPost.UserID != user.ID {
-		return errors.New("you don't have authority to remove this post!")
+		return errors.New("unauthorized to edit post")
 	}
 
 	return p.postRepo.Delete(ctx, tempPost.ID)
