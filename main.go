@@ -8,6 +8,7 @@ import (
 	"redditBack/model"
 	"redditBack/repository"
 	"redditBack/service"
+	"redditBack/utility"
 
 	"github.com/gin-gonic/gin"
 	"github.com/redis/go-redis/v9"
@@ -25,9 +26,11 @@ func main() {
 	voteRepo := repository.NewVoteRepository(db)
 	cacheRepo := repository.NewRedisCacheRepository(rdb)
 
-	authService := service.NewAuthService(&userRepo)
+	authService := service.NewAuthService(&userRepo, &cacheRepo)
 	postService := service.NewPostService(&postRepo, &userRepo)
 	voteService := service.NewVoteService(&voteRepo, &postRepo, &userRepo, &cacheRepo)
+
+	util := utility.NewUtility(&cacheRepo)
 
 	authHandler := handler.NewAuthHandler(authService)
 	postHandler := handler.NewPostHandler(postService)
@@ -37,9 +40,9 @@ func main() {
 	router.POST("/signup", authHandler.SignUp)
 	router.POST("/login", authHandler.Login)
 	auth := router.Group("/")
-	auth.Use(handler.JWTAuthMiddleware())
+	auth.Use(util.JWTAuthMiddleware())
 	{
-		//auth.POST("/signout" , authHandler.signOut)
+		auth.POST("/signout", authHandler.SignOut)
 		auth.POST("/posts/create", postHandler.CreatePost)
 		auth.PUT("/posts/update", postHandler.EditPost)
 		auth.DELETE("/posts/remove", postHandler.RemovePost)
@@ -86,7 +89,6 @@ func connetToRedis() *redis.Client {
 
 		DB: 0,
 	})
-	defer rdb.Close()
 	status, err := rdb.Ping(context.Background()).Result()
 
 	if err != nil {

@@ -1,8 +1,10 @@
 package utility
 
 import (
+	"redditBack/repository"
 	"time"
 
+	"github.com/gin-gonic/gin"
 	"github.com/golang-jwt/jwt/v5"
 )
 
@@ -12,7 +14,13 @@ type Claims struct {
 	UserID string
 	jwt.RegisteredClaims
 }
+type UtilityFunctions struct {
+	CacheRepo repository.CacheRepository
+}
 
+func NewUtility(cacheRepo repository.CacheRepository) UtilityFunctions {
+	return UtilityFunctions{CacheRepo: cacheRepo}
+}
 func GenerateToken(username string) (string, error) {
 	expirationTime := time.Now().Add(1000 * time.Minute)
 
@@ -36,4 +44,36 @@ func ParseToken(tokenString string) (*Claims, error) {
 		return claims, nil
 	}
 	return nil, err
+}
+
+func (u *UtilityFunctions) JWTAuthMiddleware() gin.HandlerFunc {
+	return func(c *gin.Context) {
+		tokenString := c.GetHeader("Authorization")
+		if tokenString == "" {
+			c.JSON(401, gin.H{"error": "Unauthorized"})
+			c.Abort()
+			return
+		}
+
+		exist, _ := u.CacheRepo.IsTokenInvalid(c.Request.Context(), tokenString)
+		if exist {
+			c.JSON(401, gin.H{"error": "Invalid token"})
+			c.Abort()
+			return
+		}
+
+		token, err := jwt.Parse(tokenString, func(token *jwt.Token) (interface{}, error) {
+			return []byte("this-is-a-definitly-safe-key"), nil
+		})
+
+		if err != nil || !token.Valid {
+			c.JSON(401, gin.H{"error": "Invalid token"})
+			c.Abort()
+			return
+		}
+
+		claims := token.Claims.(jwt.MapClaims)
+		c.Set("user_id", claims["UserID"])
+		c.Next()
+	}
 }

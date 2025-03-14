@@ -5,6 +5,7 @@ import (
 	"encoding/json"
 	"errors"
 	"fmt"
+	"log"
 	"redditBack/model"
 	"time"
 
@@ -17,6 +18,8 @@ type CacheRepository interface {
 	InvalidatePostRanking(ctx context.Context) error
 	CachePost(ctx context.Context, post *model.Post) error
 	GetPost(ctx context.Context, postID uint) (*model.Post, error)
+	InvalidateToken(ctx context.Context, token string, expiration time.Duration) error
+	IsTokenInvalid(ctx context.Context, token string) (bool, error)
 }
 
 type RedisCacheRepository struct {
@@ -30,29 +33,23 @@ func NewRedisCacheRepository(client *redis.Client) RedisCacheRepository {
 func (r *RedisCacheRepository) CacheTopPosts(ctx context.Context, timeRange string, posts []*model.Post) error {
 	pipe := r.client.TxPipeline()
 
-	// Create sorted set key for ranking
 	rankingKey := fmt.Sprintf("posts:ranking:%s", timeRange)
 
-	// Create hash key for post details
 	postsKey := "posts:details"
 
-	// Add posts to sorted set and hash
 	for _, post := range posts {
-		// Add to sorted set with score
 		pipe.ZAdd(ctx, rankingKey, redis.Z{
 			Score:  float64(post.CachedScore),
 			Member: post.ID,
 		})
 
-		// Store post details in hash
 		postJson, _ := json.Marshal(post)
 		pipe.HSet(ctx, postsKey, fmt.Sprintf("%d", post.ID), postJson)
 	}
 
-	// Set expiration based on time range
 	expiration := getExpiration(timeRange)
 	pipe.Expire(ctx, rankingKey, expiration)
-	pipe.Expire(ctx, postsKey, 24*time.Hour) // Keep details longer
+	pipe.Expire(ctx, postsKey, 24*time.Hour)
 
 	_, err := pipe.Exec(ctx)
 	return err
@@ -62,7 +59,6 @@ func (r *RedisCacheRepository) GetTopPosts(ctx context.Context, timeRange string
 	rankingKey := fmt.Sprintf("posts:ranking:%s", timeRange)
 	postsKey := "posts:details"
 
-	// Get post IDs from sorted set
 	ids, err := r.client.ZRevRange(ctx, rankingKey, 0, -1).Result()
 	if err != nil {
 		return nil, err
@@ -70,10 +66,9 @@ func (r *RedisCacheRepository) GetTopPosts(ctx context.Context, timeRange string
 
 	var posts []*model.Post
 	for _, idStr := range ids {
-		// Get post details from hash
 		postJson, err := r.client.HGet(ctx, postsKey, idStr).Result()
 		if err != nil {
-			continue // Skip if post details missing
+			continue
 		}
 
 		var post model.Post
@@ -86,7 +81,7 @@ func (r *RedisCacheRepository) GetTopPosts(ctx context.Context, timeRange string
 }
 
 func (r *RedisCacheRepository) InvalidatePostRanking(ctx context.Context) error {
-	// Delete all ranking keys
+
 	keys := []string{
 		"posts:ranking:day",
 		"posts:ranking:week",
@@ -132,4 +127,16 @@ func getExpiration(timeRange string) time.Duration {
 	default:
 		return 24 * time.Hour
 	}
+
+}
+
+func (r *RedisCacheRepository) InvalidateToken(ctx context.Context, token string, expiration time.Duration) error {
+	err := r.client.Set(ctx, "invalid_tokens:"+token, "1", expiration).Err()
+	log.Print(err)
+	return err
+}
+
+func (r *RedisCacheRepository) IsTokenInvalid(ctx context.Context, token string) (bool, error) {
+	exists, err := r.client.Exists(ctx, "invalid_tokens:"+token).Result()
+	return exists > 0, err
 }

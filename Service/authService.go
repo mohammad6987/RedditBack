@@ -5,14 +5,17 @@ import (
 	"errors"
 	"redditBack/model"
 	"redditBack/repository"
+	"time"
 )
 
 type AuthService struct {
-	userRepo repository.UserRepository
+	userRepo  repository.UserRepository
+	cacheRepo repository.CacheRepository
 }
 
-func NewAuthService(userRepo repository.UserRepository) AuthService {
-	return AuthService{userRepo: userRepo}
+func NewAuthService(userRepo repository.UserRepository, cacheRepo repository.CacheRepository) AuthService {
+	return AuthService{userRepo: userRepo,
+		cacheRepo: cacheRepo}
 }
 
 func (s *AuthService) Register(ctx context.Context, user *model.User) error {
@@ -25,7 +28,7 @@ func (s *AuthService) Register(ctx context.Context, user *model.User) error {
 		return errors.New("username already exists")
 	}
 	existingUser2, _ := s.userRepo.FindByEmail(ctx, user.Email)
-	
+
 	if existingUser2 != nil {
 		return errors.New("username already exists")
 	}
@@ -44,4 +47,14 @@ func (s *AuthService) Login(ctx context.Context, username, password string) (*mo
 	}
 
 	return user, nil
+}
+
+func (s *AuthService) InvalidateToken(ctx context.Context, tokenString string) error {
+
+	expiration := 24 * time.Hour
+	return s.cacheRepo.InvalidateToken(ctx, tokenString, expiration)
+}
+
+func (s *AuthService) IsTokenValid(ctx context.Context, tokenString string) (bool, error) {
+	return s.cacheRepo.IsTokenInvalid(ctx, tokenString)
 }

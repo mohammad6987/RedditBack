@@ -2,7 +2,6 @@ package handler
 
 import (
 	"fmt"
-	"io"
 	"net/http"
 	"redditBack/service"
 
@@ -34,9 +33,6 @@ func (h *VoteHandler) VotePost(c *gin.Context) {
 		c.JSON(http.StatusBadRequest, gin.H{"error": err.Error()})
 		return
 	}
-	body, _ := io.ReadAll(c.Request.Body)
-	fmt.Printf("Raw Request Body: %s\n", string(body))
-	fmt.Printf("req :%s %s\n", req.PostID, req.VoteValue)
 
 	err := h.voteService.VotePost(c.Request.Context(), uint(req.PostID), username, req.VoteValue)
 	if err != nil {

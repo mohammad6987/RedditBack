@@ -1,13 +1,12 @@
 package handler
 
 import (
-	"fmt"
 	"net/http"
 	"redditBack/model"
 	"redditBack/service"
 	"redditBack/utility"
+
 	"github.com/gin-gonic/gin"
-	"github.com/golang-jwt/jwt/v5"
 )
 
 type AuthHandler struct {
@@ -81,35 +80,21 @@ func (h *AuthHandler) Login(c *gin.Context) {
 		"user":  user,
 	})
 }
-func (h *AuthHandler) signOut(c *gin.Context) {
-	c.JSON(http.StatusOK, gin.H{
-		"info": "this part hasn't been implemented yet..."})
-}
 
-func JWTAuthMiddleware() gin.HandlerFunc {
-	return func(c *gin.Context) {
-		tokenString := c.GetHeader("Authorization")
-		if tokenString == "" {
-			c.JSON(401, gin.H{"error": "Unauthorized"})
-			c.Abort()
-			return
-		}
+func (h *AuthHandler) SignOut(c *gin.Context) {
 
-		token, err := jwt.Parse(tokenString, func(token *jwt.Token) (interface{}, error) {
-			return []byte("this-is-a-definitly-safe-key"), nil
-		})
-
-		if err != nil || !token.Valid {
-			c.JSON(401, gin.H{"error": "Invalid token"})
-			c.Abort()
-			return
-		}
-
-		claims := token.Claims.(jwt.MapClaims)
-
-		c.Set("user_id", claims["UserID"])
-		fmt.Println(claims["UserID"])
-
-		c.Next()
+	tokenString := c.GetHeader("Authorization")
+	if tokenString == "" {
+		c.JSON(http.StatusBadRequest, gin.H{"error": "No authorization token provided"})
+		return
 	}
+
+
+	err := h.authService.InvalidateToken(c.Request.Context(), tokenString)
+	if err != nil {
+		c.JSON(http.StatusInternalServerError, gin.H{"error": "Failed to invalidate token"})
+		return
+	}
+
+	c.JSON(http.StatusOK, gin.H{"message": "Successfully signed out"})
 }
