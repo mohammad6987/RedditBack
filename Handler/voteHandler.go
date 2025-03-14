@@ -16,6 +16,21 @@ func NewVoteHandler(voteService service.VoteService) VoteHandler {
 	return VoteHandler{voteService: voteService}
 }
 
+
+// VotePost godoc
+// @Summary Vote on a post
+// @Description Vote (+1/-1) on a post
+// @Tags votes
+// @Security BearerAuth
+// @Accept json
+// @Produce json
+// @Param vote body handler.VoteHandler.VotePost.true.req true "Vote data"
+// @Success 200 {object} map[string]interface{}
+// @Failure 400 {object} map[string]string "Invalid request format"
+// @Failure 403 {object} map[string]string "Cannot vote on own post"
+// @Failure 404 {object} map[string]string "Post not found"
+// @Failure 500 {object} map[string]string "Internal server error"
+// @Router /votes [post]
 func (h *VoteHandler) VotePost(c *gin.Context) {
 
 	usernameVal := c.Value("user_id")

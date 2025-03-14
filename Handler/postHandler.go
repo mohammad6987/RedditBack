@@ -17,6 +17,20 @@ func NewPostHandler(postService service.PostService) PostHandler {
 	return PostHandler{postService: postService}
 }
 
+
+// CreatePost godoc
+// @Summary Create a new post
+// @Description Create a new post with title and content
+// @Tags posts
+// @Security BearerAuth
+// @Accept json
+// @Produce json
+// @Param post body handler.PostHandler.CreatePost.true.req true "Post creation data"
+// @Success 200 {object} map[string]interface{}
+// @Failure 400 {object} map[string]string "Invalid request format"
+// @Failure 401 {object} map[string]string "Unauthorized"
+// @Failure 500 {object} map[string]string "Internal server error"
+// @Router /posts [post]
 func (h *PostHandler) CreatePost(c *gin.Context) {
 	usernameVal := c.Value("user_id")
 	username, ok := usernameVal.(string)
@@ -52,6 +66,21 @@ func (h *PostHandler) CreatePost(c *gin.Context) {
 
 }
 
+
+// EditPost godoc
+// @Summary Update a post
+// @Description Update an existing post's title or content
+// @Tags posts
+// @Security BearerAuth
+// @Accept json
+// @Produce json
+// @Param post body handler.PostHandler.EditPost.true.req true "Post update data"
+// @Success 200 {object} map[string]interface{}
+// @Failure 400 {object} map[string]string "Invalid request format"
+// @Failure 403 {object} map[string]string "Unauthorized to edit"
+// @Failure 404 {object} map[string]string "Post not found"
+// @Failure 500 {object} map[string]string "Internal server error"
+// @Router /posts [put]
 func (h *PostHandler) EditPost(c *gin.Context) {
 	usernameVal := c.Value("user_id")
 	username, ok := usernameVal.(string)
@@ -96,6 +125,21 @@ func (h *PostHandler) EditPost(c *gin.Context) {
 
 }
 
+
+// RemovePost godoc
+// @Summary Delete a post
+// @Description Delete an existing post
+// @Tags posts
+// @Security BearerAuth
+// @Accept json
+// @Produce json
+// @Param post body handler.PostHandler.RemovePost.true.req true "Post deletion data"
+// @Success 200 {object} map[string]interface{}
+// @Failure 400 {object} map[string]string "Invalid request format"
+// @Failure 403 {object} map[string]string "Unauthorized to delete"
+// @Failure 404 {object} map[string]string "Post not found"
+// @Failure 500 {object} map[string]string "Internal server error"
+// @Router /posts [delete]
 func (h *PostHandler) RemovePost(c *gin.Context) {
 	usernameVal := c.Value("user_id")
 	username, ok := usernameVal.(string)

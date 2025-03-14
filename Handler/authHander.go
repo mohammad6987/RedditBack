@@ -17,6 +17,18 @@ func NewAuthHandler(authService service.AuthService) AuthHandler {
 	return AuthHandler{authService: authService}
 }
 
+
+// SignUp godoc
+// @Summary Register a new user
+// @Description Create a new user account
+// @Tags authentication
+// @Accept json
+// @Produce json
+// @Param credentials body handler.AuthHandler.SignUp.true.req true "User registration data"
+// @Success 201 {object} map[string]interface{} "Successfully created user"
+// @Failure 400 {object} map[string]string "Invalid request format"
+// @Failure 500 {object} map[string]string "Internal server error"
+// @Router /signup [post]
 func (h *AuthHandler) SignUp(c *gin.Context) {
 	var req struct {
 		Username string `json:"username" binding:"required"`
@@ -52,6 +64,19 @@ func (h *AuthHandler) SignUp(c *gin.Context) {
 	})
 }
 
+
+// Login godoc
+// @Summary Authenticate user
+// @Description Login with username and password to get JWT token
+// @Tags authentication
+// @Accept json
+// @Produce json
+// @Param credentials body handler.AuthHandler.Login.true.req true "Login credentials"
+// @Success 200 {object} map[string]interface{} "Successfully logged in"
+// @Failure 400 {object} map[string]string "Invalid request format"
+// @Failure 401 {object} map[string]string "Invalid credentials"
+// @Failure 500 {object} map[string]string "Internal server error"
+// @Router /login [post]
 func (h *AuthHandler) Login(c *gin.Context) {
 	var req struct {
 		Username string `json:"username" binding:"required"`
@@ -81,6 +106,17 @@ func (h *AuthHandler) Login(c *gin.Context) {
 	})
 }
 
+
+// SignOut godoc
+// @Summary Logout user
+// @Description Invalidate user's JWT token
+// @Tags authentication
+// @Security BearerAuth
+// @Produce json
+// @Success 200 {object} map[string]string "Successfully logged out"
+// @Failure 400 {object} map[string]string "Missing authorization token"
+// @Failure 500 {object} map[string]string "Failed to invalidate token"
+// @Router /signout [post]
 func (h *AuthHandler) SignOut(c *gin.Context) {
 
 	tokenString := c.GetHeader("Authorization")

@@ -10,12 +10,37 @@ import (
 	"redditBack/service"
 	"redditBack/utility"
 
+	_ "redditBack/docs"
+
 	"github.com/gin-gonic/gin"
 	"github.com/redis/go-redis/v9"
+	swaggerFiles "github.com/swaggo/files"
+	ginSwagger "github.com/swaggo/gin-swagger"
 	"gorm.io/driver/postgres"
 	"gorm.io/gorm"
 )
 
+// @title           Reddit Clone API
+// @version         1.0
+// @description     API documentation for Reddit-like application
+// @termsOfService  http://swagger.io/terms/
+// @contact.name    API Support
+// @contact.url     http://www.example.com/support
+// @contact.email   support@example.com
+// @license.name    Apache 2.0
+// @license.url     http://www.apache.org/licenses/LICENSE-2.0.html
+// @host            localhost:8080
+// @BasePath        /api/v1
+// @in              header
+// @name            Authorization
+// @schemes         http https
+// @securityDefinitions.apikey BearerAuth
+// @in header
+// @name Authorization
+// @tag.name posts
+// @tag.description Post management operations
+// @tag.name votes
+// @tag.description Post voting operations
 func main() {
 
 	db := connetToPostgreSQL()
@@ -37,6 +62,7 @@ func main() {
 	voteHandler := handler.NewVoteHandler(voteService)
 
 	router := gin.Default()
+	router.GET("/docs/*any", ginSwagger.WrapHandler(swaggerFiles.Handler))
 	router.POST("/signup", authHandler.SignUp)
 	router.POST("/login", authHandler.Login)
 	auth := router.Group("/")
