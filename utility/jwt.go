@@ -14,7 +14,7 @@ type Claims struct {
 }
 
 func GenerateToken(username string) (string, error) {
-	expirationTime := time.Now().Add(10 * time.Minute)
+	expirationTime := time.Now().Add(1000 * time.Minute)
 
 	claims := &Claims{
 		UserID: username,
@@ -37,4 +37,3 @@ func ParseToken(tokenString string) (*Claims, error) {
 	}
 	return nil, err
 }
-

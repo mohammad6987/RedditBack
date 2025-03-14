@@ -20,7 +20,7 @@ func NewPostHandler(postService service.PostService) PostHandler {
 func (h *PostHandler) CreatePost(c *gin.Context) {
 	usernameVal := c.Value("user_id")
 	username, ok := usernameVal.(string)
-	fmt.Printf("username in post :%s", username)
+
 	if !ok {
 		c.JSON(http.StatusBadRequest, gin.H{"error": "Invalid username passed from context"})
 		return

@@ -6,7 +6,6 @@ import (
 	"redditBack/model"
 	"redditBack/service"
 	"redditBack/utility"
-
 	"github.com/gin-gonic/gin"
 	"github.com/golang-jwt/jwt/v5"
 )
@@ -35,7 +34,7 @@ func (h *AuthHandler) SignUp(c *gin.Context) {
 		PasswordHash: req.Password,
 		Email:        req.Email,
 	}
-	
+
 	err := h.authService.Register(c.Request.Context(), tempUser)
 	if err != nil {
 		c.JSON(http.StatusBadRequest, gin.H{"error": err.Error()})
@@ -82,12 +81,10 @@ func (h *AuthHandler) Login(c *gin.Context) {
 		"user":  user,
 	})
 }
-func (h *AuthHandler) signOut(c *gin.Context){
-	c.JSON(http.StatusOK , gin.H{
-		"info":"this part hasn't been implemented yet..."})
+func (h *AuthHandler) signOut(c *gin.Context) {
+	c.JSON(http.StatusOK, gin.H{
+		"info": "this part hasn't been implemented yet..."})
 }
-
-
 
 func JWTAuthMiddleware() gin.HandlerFunc {
 	return func(c *gin.Context) {
@@ -112,9 +109,7 @@ func JWTAuthMiddleware() gin.HandlerFunc {
 
 		c.Set("user_id", claims["UserID"])
 		fmt.Println(claims["UserID"])
-		
+
 		c.Next()
 	}
 }
-
-

@@ -18,18 +18,20 @@ import (
 func main() {
 
 	db := connetToPostgreSQL()
-	//rdb := connetToRedis()
+	rdb := connetToRedis()
 
 	userRepo := repository.NewUserRepository(db)
 	postRepo := repository.NewPostRepository(db)
-	//voteRepo := repository.NewVoteRepository(db)
+	voteRepo := repository.NewVoteRepository(db)
+	cacheRepo := repository.NewRedisCacheRepository(rdb)
 
 	authService := service.NewAuthService(&userRepo)
 	postService := service.NewPostService(&postRepo, &userRepo)
-	//voteService := service.NewVoteService(voteRepo, postRepo)
+	voteService := service.NewVoteService(&voteRepo, &postRepo , &userRepo , &cacheRepo)
 
 	authHandler := handler.NewAuthHandler(authService)
 	postHandler := handler.NewPostHandler(postService)
+	voteHandler := handler.NewVoteHandler(&voteService)
 
 	router := gin.Default()
 	router.POST("/signup", authHandler.SignUp)
@@ -41,7 +43,7 @@ func main() {
 		auth.POST("/posts/create", postHandler.CreatePost)
 		auth.PUT("/posts/update", postHandler.EditPost)
 		auth.DELETE("/posts/remove", postHandler.RemovePost)
-		/*auth.POST("/posts/:id/vote", VotePost)*/
+		auth.POST("/vote",voteHandler.VotePost)
 	}
 	router.Run("0.0.0.0:8080")
 }

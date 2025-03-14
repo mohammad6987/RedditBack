@@ -13,6 +13,7 @@ type PostRepository interface {
 	FindByID(ctx context.Context, id uint) (*model.Post, error)
 	Update(ctx context.Context, post *model.Post) error
 	Delete(ctx context.Context, id uint) error
+	UpdateScore(ctx context.Context, postID uint, scoreDelta int) error
 }
 
 type PostRepositoryImpl struct {
@@ -38,7 +39,7 @@ func (r *PostRepositoryImpl) FindByID(ctx context.Context, id uint) (*model.Post
 
 func (r *PostRepositoryImpl) Update(ctx context.Context, post *model.Post) error {
 	result := r.db.WithContext(ctx).Model(&model.Post{}).
-		Where("id = ?", post.ID).
+		Where("ID = ?", post.ID).
 		Updates(post)
 
 	if result.Error != nil {
@@ -58,4 +59,21 @@ func (r *PostRepositoryImpl) Delete(ctx context.Context, id uint) error {
 		return errors.New("No post record with this ID!")
 	}
 	return result.Error
+}
+
+func (r *PostRepositoryImpl) UpdateScore(ctx context.Context, postID uint, scoreDelta int) error {
+	result := r.db.WithContext(ctx).
+		Model(&model.Post{}).
+		Where("id = ?", postID).
+		Update("cached_score", gorm.Expr("cached_score + ?", scoreDelta))
+
+	if result.Error != nil {
+		return result.Error
+	}
+
+	if result.RowsAffected == 0 {
+		return errors.New("post not found")
+	}
+
+	return nil
 }

@@ -44,7 +44,7 @@ func (p *PostService) EditPost(ctx context.Context, post *model.Post, username s
 		ID:      tempPost.ID,
 		Title:   post.Title,
 		Content: post.Content,
-		UserID:  tempPost.UserID, // Preserve original owner
+		UserID:  tempPost.UserID, 
 	}
 	return p.postRepo.Update(ctx, &updatedPost)
 
